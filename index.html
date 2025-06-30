@@ -1,25 +1,37 @@
+Tentu, ini adalah seluruh kode HTML untuk prototipe interaktif "atTend" yang telah diperbarui, lengkap dengan fitur Gemini API, terjemahan Bahasa Inggris, dan ikon Material Design.
+Anda bisa menyalin seluruh kode ini dan menyimpannya sebagai file .html (misalnya, attend_prototype.html), lalu membukanya dengan peramban web Anda untuk melihat hasilnya.
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>atTend - Prototipe Interaktif</title>
+    <title>atTend - Interactive Prototype</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: atTend Palette (Biru Tua, Biru Cerah, Hijau, Oranye, Merah, Skala Abu-abu) -->
-    <!-- Application Structure Plan: Menggunakan struktur Single-Page Application (SPA) dengan beberapa div yang berfungsi sebagai "layar". JavaScript akan mengontrol visibilitas setiap layar untuk mensimulasikan navigasi antar halaman, memberikan pengalaman seperti aplikasi native. Struktur ini dipilih untuk menciptakan prototipe interaktif yang cepat dan efisien dalam satu file, mengikuti alur pengguna yang logis dari login, dashboard, hingga fitur pengajuan dan persetujuan atasan, sesuai dengan panduan UI/UX. -->
-    <!-- Visualization & Content Choices: Mengimplementasikan elemen UI dari panduan (kartu, tombol, formulir, daftar) menggunakan HTML dan Tailwind CSS. Tampilan daftar seperti riwayat pengajuan dan persetujuan atasan menggunakan layout flexbox/grid untuk menyajikan data secara terstruktur. Interaksi seperti timer OTP, simulasi absensi wajah, navigasi antar layar, dan simulasi persetujuan diimplementasikan dengan JavaScript untuk membuat prototipe terasa hidup dan memberikan gambaran desain yang lengkap. Tidak ada visualisasi data (chart) yang diperlukan. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scroll during loader */
+        }
+        #app-container {
+             height: 100vh; /* Ensure app container fills viewport height */
+             overflow-y: hidden; /* Initially hide scrollbar for smooth loader transition */
         }
         .screen {
             display: none;
             min-height: 100vh;
             flex-direction: column;
+            position: absolute; /* Position screens absolutely to overlay */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto; /* Allow scrolling within individual screens */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
         .active-screen {
             display: flex;
@@ -41,42 +53,65 @@
         .nav-bottom.active {
             color: #3498DB;
         }
+        /* Custom spinner for Face Recognition */
+        #face-rec-spinner > div {
+            border-color: #3498DB transparent #3498DB transparent;
+        }
+
+        /* Responsive styles for main container */
+        @media (min-width: 640px) {
+            #app-container {
+                border-radius: 1rem; /* Rounded corners for desktop view */
+                margin-top: 1rem;
+                margin-bottom: 1rem;
+                height: calc(100vh - 2rem); /* Adjust height for margin */
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-200 flex justify-center">
+<body class="bg-gray-200 flex justify-center items-center">
 
-    <main id="app-container" class="w-full max-w-md min-h-screen bg-[#F5F7FA] shadow-2xl overflow-y-auto relative">
+    <main id="app-container" class="w-full max-w-md bg-[#F5F7FA] shadow-2xl relative">
 
-        <!-- ===== Layar 1: Login ===== -->
-        <div id="screen-login" class="screen active-screen p-6 justify-center">
+        <div id="screen-loader" class="screen active-screen justify-center items-center bg-[#F5F7FA] text-[#2C3E50]">
+            <h1 class="text-5xl font-bold mb-8">atTend</h1>
+            <div class="relative w-24 h-24 flex items-center justify-center">
+                <div class="absolute inset-0 bg-[#3498DB] rounded-full opacity-75 animate-ping"></div>
+                <div class="absolute inset-0 bg-[#3498DB] rounded-full flex items-center justify-center text-white text-3xl font-semibold">
+                    <span class="opacity-0 animate-pulse delay-500">A</span>
+                </div>
+            </div>
+            <p class="mt-8 text-lg text-[#7F8C8D]">Loading application...</p>
+        </div>
+
+        <div id="screen-login" class="screen p-6 justify-center">
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold text-[#2C3E50]">atTend</h1>
             </div>
             <div class="text-left mb-8">
-                <h2 class="text-3xl font-bold text-[#34495E]">Selamat Datang</h2>
-                <p class="text-[#7F8C8D] mt-1">Silakan masuk untuk melanjutkan.</p>
+                <h2 class="text-3xl font-bold text-[#34495E]">Welcome</h2>
+                <p class="text-[#7F8C8D] mt-1">Please log in to continue.</p>
             </div>
             <div class="space-y-6">
                 <div>
-                    <label for="nip" class="block text-sm font-medium text-[#34495E] mb-1">Nomor Induk Pegawai (NIP)</label>
-                    <input type="text" id="nip" placeholder="Masukkan NIP Anda" class="w-full h-14 px-4 rounded-lg border border-[#DCE1E7] focus:ring-2 focus:ring-[#3498DB] focus:outline-none text-[#34495E]">
+                    <label for="nip" class="block text-sm font-medium text-[#34495E] mb-1">Employee ID (NIP)</label>
+                    <input type="text" id="nip" placeholder="Enter your NIP" class="w-full h-14 px-4 rounded-lg border border-[#DCE1E7] focus:ring-2 focus:ring-[#3498DB] focus:outline-none text-[#34495E]">
                 </div>
-                <button id="btn-login-lanjut" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Lanjut</button>
+                <button id="btn-login-lanjut" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Continue</button>
             </div>
             <div class="text-center mt-6">
-                <a href="#" class="text-sm font-medium text-[#7F8C8D] hover:text-[#3498DB]">Lupa NIP?</a>
+                <a href="#" class="text-sm font-medium text-[#7F8C8D] hover:text-[#3498DB]">Forgot NIP?</a>
             </div>
         </div>
 
-        <!-- ===== Layar 2: Verifikasi OTP ===== -->
         <div id="screen-otp" class="screen p-6">
             <div class="flex items-center mb-12">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Verifikasi OTP</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">OTP Verification</h2>
             </div>
             <div class="text-center">
-                <p class="text-[#34495E] mb-2">Kami telah mengirimkan kode 6 digit ke:</p>
-                <p class="font-bold text-[#34495E]">a***@perusahaan.com</p>
+                <p class="text-[#34495E] mb-2">We have sent a 6-digit code to:</p>
+                <p class="font-bold text-[#34495E]">a***@company.com</p>
             </div>
             <div class="flex justify-center space-x-3 my-8">
                 <input type="tel" maxlength="1" class="otp-input" data-otp-index="0">
@@ -87,23 +122,22 @@
                 <input type="tel" maxlength="1" class="otp-input" data-otp-index="5">
             </div>
             <div class="text-center text-sm text-[#7F8C8D] mb-8">
-                <span id="otp-timer-text">Kirim ulang OTP dalam <span id="otp-timer" class="font-bold">30</span> detik</span>
-                <button id="btn-resend-otp" class="hidden font-bold text-[#3498DB] hover:underline">Kirim ulang OTP</button>
+                <span id="otp-timer-text">Resend OTP in <span id="otp-timer" class="font-bold">30</span> seconds</span>
+                <button id="btn-resend-otp" class="hidden font-bold text-[#3498DB] hover:underline">Resend OTP</button>
             </div>
-            <button id="btn-verifikasi" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Verifikasi</button>
+            <button id="btn-verifikasi" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Verify</button>
              <div class="text-center mt-6">
-                <a href="#" class="nav-back-login text-sm font-medium text-[#3498DB] hover:underline">Bukan Anda? Kembali ke Login</a>
+                <a href="#" class="nav-back-login text-sm font-medium text-[#3498DB] hover:underline">Not you? Back to Login</a>
             </div>
         </div>
 
-        <!-- ===== Layar 3 & 4: Dashboard (Konten dinamis) ===== -->
         <div id="screen-dashboard" class="screen flex-grow pb-24">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center">
                         <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center font-bold text-xl text-gray-600">R</div>
                         <div class="ml-4">
-                            <p class="font-bold text-lg text-[#34495E]">Halo, Rian!</p>
+                            <p class="font-bold text-lg text-[#34495E]">Hello, Rian!</p>
                             <p class="text-sm text-[#7F8C8D]">Software Engineer</p>
                         </div>
                     </div>
@@ -114,92 +148,88 @@
                 </div>
 
                 <div id="dashboard-card" class="p-6 bg-white rounded-2xl shadow-md text-center">
-                    <!-- Konten Kartu dinamis dari JS -->
-                </div>
+                    </div>
                  <div class="mt-8 p-6 bg-white rounded-2xl shadow-md">
-                    <h3 class="font-semibold text-lg text-[#34495E] mb-4">Informasi Cepat</h3>
+                    <h3 class="font-semibold text-lg text-[#34495E] mb-4">Quick Info</h3>
                     <div class="grid grid-cols-2 gap-4 text-center">
                         <div>
                             <p class="text-3xl font-bold text-[#27AE60]">12</p>
-                            <p class="text-sm text-[#7F8C8D]">Sisa Cuti</p>
+                            <p class="text-sm text-[#7F8C8D]">Leave Balance</p>
                         </div>
                         <div>
                             <p class="text-3xl font-bold text-[#F39C12]">3</p>
-                            <p class="text-sm text-[#7F8C8D]">Pengajuan Pending</p>
+                            <p class="text-sm text-[#7F8C8D]">Pending Requests</p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Navigasi Bawah -->
             <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-20 bg-white shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.1)] flex justify-around items-center rounded-t-2xl z-10">
                 <button class="nav-bottom flex flex-col items-center text-[#3498DB] active" data-target="screen-dashboard">
-                    <span class="text-3xl">⌂</span>
-                    <span class="block text-xs font-semibold">Beranda</span>
+                    <span class="text-3xl">🏠</span>
+                    <span class="block text-xs font-semibold">Home</span>
                 </button>
                 <button class="nav-bottom flex flex-col items-center text-[#7F8C8D]" data-target="screen-history">
-                    <span class="text-3xl">🗂️</span>
-                    <span class="block text-xs font-semibold">Riwayat</span>
+                    <span class="text-3xl">📜</span>
+                    <span class="block text-xs font-semibold">History</span>
                 </button>
                 <button class="nav-bottom flex flex-col items-center text-[#7F8C8D]" data-target="screen-submission-choice">
-                     <span class="text-3xl">✍️</span>
-                    <span class="block text-xs font-semibold">Pengajuan</span>
+                     <span class="text-3xl">📝</span>
+                    <span class="block text-xs font-semibold">Requests</span>
                 </button>
                  <button class="nav-bottom flex flex-col items-center text-[#7F8C8D]" data-target="screen-profile">
                      <span class="text-3xl">👤</span>
-                    <span class="block text-xs font-semibold">Profil</span>
+                    <span class="block text-xs font-semibold">Profile</span>
                 </button>
             </div>
         </div>
         
-        <!-- ===== Layar 5: Face Recognition ===== -->
         <div id="screen-face-rec" class="screen bg-black h-screen justify-center items-center p-6">
              <div class="absolute top-0 left-0 right-0 p-6 flex items-center text-white z-10">
                 <button class="nav-back text-2xl mr-4">‹</button>
-                <h2 class="text-xl font-bold text-center flex-grow">Absensi Wajah</h2>
+                <h2 class="text-xl font-bold text-center flex-grow">Face Attendance</h2>
             </div>
             <div class="relative w-80 h-80 border-4 border-dashed border-white rounded-full flex items-center justify-center bg-gray-800/50">
-                 <p id="face-rec-status" class="text-white text-lg">Posisikan wajah Anda</p>
+                 <p id="face-rec-status" class="text-white text-lg">Position your face</p>
                  <div id="face-rec-spinner" class="absolute inset-0 flex items-center justify-center hidden">
                      <div class="w-16 h-16 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
                  </div>
             </div>
-             <p class="text-white text-center mt-4">Mohon pastikan pencahayaan cukup dan wajah terlihat jelas.</p>
+             <p class="text-white text-center mt-4">Please ensure sufficient lighting and clear visibility of your face.</p>
         </div>
         
-        <!-- ===== Layar 6: Pilihan Pengajuan ===== -->
         <div id="screen-submission-choice" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Pengajuan</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Requests</h2>
             </div>
             <div class="space-y-4">
                 <div class="submission-item bg-white p-4 rounded-xl shadow-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 transition" data-target="screen-override-form">
                     <div class="flex items-center">
-                        <div class="text-3xl mr-4">🔧</div>
+                        <div class="text-3xl mr-4">🛠️</div>
                         <div>
-                            <p class="font-semibold text-[#34495E]">Pengajuan Override</p>
-                            <p class="text-xs text-[#7F8C8D]">Koreksi absensi yang terlewat.</p>
+                            <p class="font-semibold text-[#34495E]">Override Request</p>
+                            <p class="text-xs text-[#7F8C8D]">Correct missed attendance records.</p>
                         </div>
                     </div>
                     <span class="text-xl text-[#7F8C8D]">›</span>
                 </div>
                 <div class="submission-item bg-white p-4 rounded-xl shadow-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 transition" data-target="screen-leave-form">
                     <div class="flex items-center">
-                        <div class="text-3xl mr-4">🌿</div>
+                        <div class="text-3xl mr-4">🌴</div>
                         <div>
-                            <p class="font-semibold text-[#34495E]">Pengajuan Cuti</p>
-                            <p class="text-xs text-[#7F8C8D]">Ajukan cuti dan jenis cuti.</p>
+                            <p class="font-semibold text-[#34495E]">Leave Request</p>
+                            <p class="text-xs text-[#7F8C8D]">Submit leave and leave type.</p>
                         </div>
                     </div>
                     <span class="text-xl text-[#7F8C8D]">›</span>
                 </div>
                 <div class="submission-item bg-white p-4 rounded-xl shadow-sm flex items-center justify-between cursor-pointer hover:bg-gray-50 transition" data-target="screen-overtime-form">
                     <div class="flex items-center">
-                        <div class="text-3xl mr-4">➕</div>
+                        <div class="text-3xl mr-4">⏱️</div>
                         <div>
-                            <p class="font-semibold text-[#34495E]">Pengajuan Lembur</p>
-                            <p class="text-xs text-[#7F8C8D]">Ajukan jam kerja lembur.</p>
+                            <p class="font-semibold text-[#34495E]">Overtime Request</p>
+                            <p class="text-xs text-[#7F8C8D]">Submit overtime hours.</p>
                         </div>
                     </div>
                     <span class="text-xl text-[#7F8C8D]">›</span>
@@ -208,8 +238,8 @@
                     <div class="flex items-center">
                         <div class="text-3xl mr-4">👨‍💼</div>
                         <div>
-                            <p class="font-semibold text-[#34495E]">Persetujuan Atasan</p>
-                            <p class="text-xs text-[#7F8C8D]">Tinjau pengajuan bawahan.</p>
+                            <p class="font-semibold text-[#34495E]">Manager Approval</p>
+                            <p class="text-xs text-[#7F8C8D]">Review subordinate requests.</p>
                         </div>
                     </div>
                     <span class="text-xl text-[#7F8C8D]">›</span>
@@ -217,162 +247,163 @@
             </div>
         </div>
 
-        <!-- ===== Layar 7a: Formulir Pengajuan Cuti (Contoh Detail) ===== -->
         <div id="screen-leave-form" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Pengajuan Cuti</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Leave Request</h2>
             </div>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Jenis Cuti</label>
-                    <select class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] bg-white text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
-                        <option>Cuti Tahunan</option>
-                        <option>Cuti Sakit</option>
-                        <option>Cuti Pribadi</option>
-                        <option>Cuti Melahirkan</option>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Leave Type</label>
+                    <select id="leave-type-select" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] bg-white text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
+                        <option>Annual Leave</option>
+                        <option>Sick Leave</option>
+                        <option>Personal Leave</option>
+                        <option>Maternity Leave</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Tanggal Mulai</label>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Start Date</label>
                     <input type="date" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                  <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Tanggal Selesai</label>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">End Date</label>
                     <input type="date" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Alasan Cuti</label>
-                    <textarea placeholder="Tulis alasan Anda..." class="w-full h-28 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none resize-none"></textarea>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Reason for Leave</label>
+                    <textarea id="leave-reason-textarea" placeholder="Write your reason..." class="w-full h-28 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none resize-none"></textarea>
+                    <button id="btn-generate-leave-reason" class="w-full bg-[#E0E0E0] text-[#34495E] h-10 rounded-lg font-medium text-sm mt-2 hover:bg-gray-200 transition-colors">✨ Generate Reason</button>
+                     <p id="loading-leave-reason" class="text-center text-sm text-[#7F8C8D] mt-2 hidden">Generating...</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Atasan untuk Persetujuan</label>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Approving Manager</label>
                     <select class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] bg-white text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
-                        <option>Pilih Atasan</option>
+                        <option>Select Manager</option>
                         <option>Budi Santoso (Manager)</option>
                         <option>Citra Dewi (Head of Dept)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Dokumen Pendukung (Opsional)</label>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Supporting Document (Optional)</label>
                     <div class="flex items-center justify-center h-14 border-2 border-dashed border-[#DCE1E7] rounded-lg bg-gray-50 text-[#7F8C8D] cursor-pointer hover:bg-gray-100 transition">
-                        <span>Unggah File (PDF, JPG)</span>
+                        <span>Upload File (PDF, JPG)</span>
                         <input type="file" class="hidden">
                     </div>
                 </div>
-                <button id="btn-submit-leave" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Ajukan</button>
+                <button id="btn-submit-leave" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Submit</button>
             </div>
         </div>
 
-        <!-- ===== Layar 7b: Formulir Pengajuan Override (Simulasi) ===== -->
         <div id="screen-override-form" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Pengajuan Override</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Override Request</h2>
             </div>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Tanggal Absensi</label>
-                    <input type="date" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E]">
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Attendance Date</label>
+                    <input type="date" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Jam Seharusnya Clock In</label>
-                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E]">
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Intended Clock In Time</label>
+                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                  <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Jam Seharusnya Clock Out</label>
-                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E]">
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Intended Clock Out Time</label>
+                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Alasan Override</label>
-                    <textarea placeholder="Contoh: Lupa clock-in, sistem error..." class="w-full h-28 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] resize-none"></textarea>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Reason for Override</label>
+                    <textarea id="override-reason-textarea" placeholder="E.g., Forgot to clock-in, system error..." class="w-full h-28 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] resize-none focus:ring-2 focus:ring-[#3498DB] focus:outline-none"></textarea>
+                    <button id="btn-generate-override-reason" class="w-full bg-[#E0E0E0] text-[#34495E] h-10 rounded-lg font-medium text-sm mt-2 hover:bg-gray-200 transition-colors">✨ Generate Reason</button>
+                    <p id="loading-override-reason" class="text-center text-sm text-[#7F8C8D] mt-2 hidden">Generating...</p>
                 </div>
-                <button id="btn-submit-override" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Ajukan Override</button>
+                <button id="btn-submit-override" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Submit Override</button>
             </div>
         </div>
 
-        <!-- ===== Layar 7c: Formulir Pengajuan Overtime (Simulasi) ===== -->
         <div id="screen-overtime-form" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Pengajuan Lembur</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Overtime Request</h2>
             </div>
             <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Tanggal Lembur</label>
-                    <input type="date" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E]">
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Overtime Date</label>
+                    <input type="date" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Jam Mulai Lembur</label>
-                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E]">
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Overtime Start Time</label>
+                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                  <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Jam Selesai Lembur</label>
-                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E]">
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Overtime End Time</label>
+                    <input type="time" class="w-full h-14 px-3 rounded-lg border border-[#DCE1E7] text-[#34495E] focus:ring-2 focus:ring-[#3498DB] focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Deskripsi Pekerjaan Lembur</label>
-                    <textarea placeholder="Jelaskan pekerjaan yang dilakukan saat lembur..." class="w-full h-28 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] resize-none"></textarea>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Overtime Work Description</label>
+                    <textarea id="overtime-reason-textarea" placeholder="Describe the work performed during overtime..." class="w-full h-28 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] resize-none focus:ring-2 focus:ring-[#3498DB] focus:outline-none"></textarea>
+                    <button id="btn-generate-overtime-reason" class="w-full bg-[#E0E0E0] text-[#34495E] h-10 rounded-lg font-medium text-sm mt-2 hover:bg-gray-200 transition-colors">✨ Generate Reason</button>
+                    <p id="loading-overtime-reason" class="text-center text-sm text-[#7F8C8D] mt-2 hidden">Generating...</p>
                 </div>
-                <button id="btn-submit-overtime" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Ajukan Lembur</button>
+                <button id="btn-submit-overtime" class="w-full bg-[#3498DB] text-white h-14 rounded-xl font-bold text-lg hover:bg-blue-600 transition-colors">Submit Overtime</button>
             </div>
         </div>
 
-        <!-- ===== Layar 8: Riwayat Pengajuan ===== -->
         <div id="screen-history" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Riwayat Pengajuan</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Request History</h2>
             </div>
             <div class="space-y-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Cuti Tahunan</p>
-                            <p class="text-xs text-[#7F8C8D]">Diajukan: 2025-06-25</p>
+                            <p class="font-semibold text-[#34495E]">Annual Leave</p>
+                            <p class="text-xs text-[#7F8C8D]">Submitted: 2025-06-25</p>
                         </div>
-                        <span class="text-xs font-bold text-[#27AE60] bg-green-100 px-2 py-1 rounded-full">Disetujui</span>
+                        <span class="text-xs font-bold text-[#27AE60] bg-green-100 px-2 py-1 rounded-full">Approved</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Alasan: Liburan keluarga.</p>
+                    <p class="text-sm text-[#34495E] mt-2">Reason: Family vacation.</p>
                 </div>
                  <div class="bg-white p-4 rounded-xl shadow-sm">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Pengajuan Lembur</p>
-                            <p class="text-xs text-[#7F8C8D]">Diajukan: 2025-06-20</p>
+                            <p class="font-semibold text-[#34495E]">Overtime Request</p>
+                            <p class="text-xs text-[#7F8C8D]">Submitted: 2025-06-20</p>
                         </div>
-                        <span class="text-xs font-bold text-[#E74C3C] bg-red-100 px-2 py-1 rounded-full">Ditolak</span>
+                        <span class="text-xs font-bold text-[#E74C3C] bg-red-100 px-2 py-1 rounded-full">Rejected</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Durasi: 2 jam. Keterangan: Proyek tidak mendesak.</p>
+                    <p class="text-sm text-[#34495E] mt-2">Duration: 2 hours. Note: Project not urgent.</p>
                 </div>
                  <div class="bg-white p-4 rounded-xl shadow-sm">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Pengajuan Override</p>
-                            <p class="text-xs text-[#7F8C8D]">Diajukan: 2025-06-18</p>
+                            <p class="font-semibold text-[#34495E]">Override Request</p>
+                            <p class="text-xs text-[#7F8C8D]">Submitted: 2025-06-18</p>
                         </div>
-                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Menunggu</span>
+                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Pending</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Keterangan: Lupa clock-in.</p>
+                    <p class="text-sm text-[#34495E] mt-2">Note: Forgot to clock-in.</p>
                 </div>
                  <div class="bg-white p-4 rounded-xl shadow-sm">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Cuti Sakit</p>
-                            <p class="text-xs text-[#7F8C8D]">Diajukan: 2025-06-10</p>
+                            <p class="font-semibold text-[#34495E]">Sick Leave</p>
+                            <p class="text-xs text-[#7F8C8D]">Submitted: 2025-06-10</p>
                         </div>
-                        <span class="text-xs font-bold text-[#27AE60] bg-green-100 px-2 py-1 rounded-full">Disetujui</span>
+                        <span class="text-xs font-bold text-[#27AE60] bg-green-100 px-2 py-1 rounded-full">Approved</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Alasan: Demam tinggi (terlampir surat dokter).</p>
+                    <p class="text-sm text-[#34495E] mt-2">Reason: High fever (doctor's note attached).</p>
                 </div>
             </div>
         </div>
         
-        <!-- ===== Layar 9: Profil Pengguna (Simulasi) ===== -->
         <div id="screen-profile" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Profil Saya</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">My Profile</h2>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-md text-center">
                 <div class="w-24 h-24 rounded-full bg-blue-100 mx-auto mb-4 flex items-center justify-center font-bold text-4xl text-[#3498DB]">R</div>
@@ -380,75 +411,77 @@
                 <p class="text-sm text-[#7F8C8D] mb-4">Software Engineer - ID: 123456</p>
                 <div class="border-t border-gray-200 pt-4 mt-4 text-left">
                     <p class="text-sm text-[#34495E] mb-2"><span class="font-semibold">Email:</span> rian.pratama@example.com</p>
-                    <p class="text-sm text-[#34495E] mb-2"><span class="font-semibold">Departemen:</span> IT</p>
-                    <p class="text-sm text-[#34495E] mb-2"><span class="font-semibold">Bergabung Sejak:</span> 1 Januari 2023</p>
+                    <p class="text-sm text-[#34495E] mb-2"><span class="font-semibold">Department:</span> IT</p>
+                    <p class="text-sm text-[#34495E] mb-2"><span class="font-semibold">Joined Since:</span> January 1, 2023</p>
                 </div>
             </div>
-            <button id="btn-logout" class="w-full bg-[#E74C3C] text-white h-14 rounded-xl font-bold text-lg mt-8 hover:bg-red-600 transition-colors">Keluar</button>
+            <button id="btn-logout" class="w-full bg-[#E74C3C] text-white h-14 rounded-xl font-bold text-lg mt-8 hover:bg-red-600 transition-colors">Log Out</button>
         </div>
 
-        <!-- ===== Layar 10: Persetujuan Atasan (Daftar Pengajuan) ===== -->
         <div id="screen-manager-approval-list" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Persetujuan Pengajuan</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Request Approval</h2>
             </div>
             <div class="space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition" data-target="screen-manager-approval-detail" data-approval-type="Cuti" data-applicant="Indah Sari" data-date="2025-06-28" data-reason="Liburan Keluarga">
+                <div class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition" data-target="screen-manager-approval-detail" data-approval-type="Leave" data-applicant="Indah Sari" data-date="2025-06-28" data-reason="Family Vacation" data-period="July 1 - July 5, 2025">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Cuti Tahunan</p>
-                            <p class="text-xs text-[#7F8C8D]">Dari: Indah Sari</p>
+                            <p class="font-semibold text-[#34495E]">Annual Leave</p>
+                            <p class="text-xs text-[#7F8C8D]">From: Indah Sari</p>
                         </div>
-                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Menunggu</span>
+                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Pending</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Periode: 1 - 5 Juli 2025</p>
+                    <p class="text-sm text-[#34495E] mt-2">Period: July 1 - July 5, 2025</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition" data-target="screen-manager-approval-detail" data-approval-type="Lembur" data-applicant="Adi Wijaya" data-date="2025-06-27" data-reason="Penyelesaian Proyek Urgent">
+                <div class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition" data-target="screen-manager-approval-detail" data-approval-type="Overtime" data-applicant="Adi Wijaya" data-date="2025-06-27" data-reason="Urgent Project Completion" data-duration="3 hours (20:00 - 23:00)">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Pengajuan Lembur</p>
-                            <p class="text-xs text-[#7F8C8D]">Dari: Adi Wijaya</p>
+                            <p class="font-semibold text-[#34495E]">Overtime Request</p>
+                            <p class="text-xs text-[#7F8C8D]">From: Adi Wijaya</p>
                         </div>
-                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Menunggu</span>
+                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Pending</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Durasi: 3 jam (20:00 - 23:00)</p>
+                    <p class="text-sm text-[#34495E] mt-2">Duration: 3 hours (20:00 - 23:00)</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition" data-target="screen-manager-approval-detail" data-approval-type="Override" data-applicant="Siti Aminah" data-date="2025-06-26" data-reason="Lupa Clock Out">
+                <div class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition" data-target="screen-manager-approval-detail" data-approval-type="Override" data-applicant="Siti Aminah" data-date="2025-06-26" data-reason="Forgot Clock Out" data-override-detail="Date: June 26, Clock In: 09:00, Clock Out: 17:00">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-semibold text-[#34495E]">Override Absensi</p>
-                            <p class="text-xs text-[#7F8C8D]">Dari: Siti Aminah</p>
+                            <p class="font-semibold text-[#34495E]">Attendance Override</p>
+                            <p class="text-xs text-[#7F8C8D]">From: Siti Aminah</p>
                         </div>
-                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Menunggu</span>
+                        <span class="text-xs font-bold text-[#F39C12] bg-yellow-100 px-2 py-1 rounded-full">Pending</span>
                     </div>
-                    <p class="text-sm text-[#34495E] mt-2">Tanggal: 26 Juni, Masuk: 09:00, Pulang: 17:00</p>
+                    <p class="text-sm text-[#34495E] mt-2">Date: June 26, Clock In: 09:00, Clock Out: 17:00</p>
                 </div>
             </div>
         </div>
 
-        <!-- ===== Layar 11: Persetujuan Atasan (Detail Pengajuan) ===== -->
         <div id="screen-manager-approval-detail" class="screen p-6 pb-24">
             <div class="flex items-center mb-8">
                 <button class="nav-back text-2xl text-[#34495E] mr-4">‹</button>
-                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Detail Pengajuan</h2>
+                <h2 class="text-xl font-bold text-[#34495E] text-center flex-grow">Request Details</h2>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-md">
                 <h3 id="detail-type" class="text-xl font-bold text-[#34495E] mb-4"></h3>
                 <div class="space-y-3 text-[#34495E]">
-                    <p><span class="font-semibold">Pengaju:</span> <span id="detail-applicant"></span></p>
-                    <p><span class="font-semibold">Tanggal Diajukan:</span> <span id="detail-date"></span></p>
-                    <p><span class="font-semibold">Alasan/Keterangan:</span> <span id="detail-reason"></span></p>
+                    <p><span class="font-semibold">Applicant:</span> <span id="detail-applicant"></span></p>
+                    <p><span class="font-semibold">Date Submitted:</span> <span id="detail-date"></span></p>
+                    <p><span class="font-semibold">Reason/Notes:</span> <span id="detail-reason"></span></p>
                     <p id="detail-period-or-duration" class=""></p>
                 </div>
+                <button id="btn-summarize-request" class="w-full bg-[#E0E0E0] text-[#34495E] h-10 rounded-lg font-medium text-sm mt-4 hover:bg-gray-200 transition-colors">✨ Summarize Request</button>
+                <p id="loading-summary" class="text-center text-sm text-[#7F8C8D] mt-2 hidden">Summarizing...</p>
+                <div id="summary-output" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-[#34495E] hidden"></div>
+
                 <div class="mt-6">
-                    <label class="block text-sm font-medium text-[#34495E] mb-1">Catatan Atasan (Opsional)</label>
-                    <textarea placeholder="Tambahkan catatan Anda..." class="w-full h-24 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] resize-none"></textarea>
+                    <label class="block text-sm font-medium text-[#34495E] mb-1">Manager's Notes (Optional)</label>
+                    <textarea placeholder="Add your notes..." class="w-full h-24 p-3 rounded-lg border border-[#DCE1E7] text-[#34495E] resize-none focus:ring-2 focus:ring-[#3498DB] focus:outline-none"></textarea>
                 </div>
             </div>
             <div class="mt-8 flex space-x-4">
-                <button id="btn-reject-request" class="flex-1 bg-[#E74C3C] text-white h-14 rounded-xl font-bold text-lg hover:bg-red-600 transition-colors">Tolak</button>
-                <button id="btn-approve-request" class="flex-1 bg-[#27AE60] text-white h-14 rounded-xl font-bold text-lg hover:bg-green-600 transition-colors">Setujui</button>
+                <button id="btn-reject-request" class="flex-1 bg-[#E74C3C] text-white h-14 rounded-xl font-bold text-lg hover:bg-red-600 transition-colors">Reject</button>
+                <button id="btn-approve-request" class="flex-1 bg-[#27AE60] text-white h-14 rounded-xl font-bold text-lg hover:bg-green-600 transition-colors">Approve</button>
             </div>
         </div>
 
@@ -456,44 +489,123 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const appContainer = document.getElementById('app-container');
             const screens = document.querySelectorAll('.screen');
             const navBottomButtons = document.querySelectorAll('.nav-bottom');
             const navBackButtons = document.querySelectorAll('.nav-back');
             const navBackToLoginButton = document.querySelector('.nav-back-login');
             const submissionItems = document.querySelectorAll('.submission-item');
-            const managerApprovalItems = document.querySelectorAll('#screen-manager-approval-list .bg-white');
+            const managerApprovalListItems = document.querySelectorAll('#screen-manager-approval-list .bg-white');
+            const otpInputs = document.querySelectorAll('.otp-input');
 
-            let historyStack = ['screen-login'];
+            // LLM Feature Elements
+            const btnGenerateLeaveReason = document.getElementById('btn-generate-leave-reason');
+            const leaveReasonTextarea = document.getElementById('leave-reason-textarea');
+            const loadingLeaveReason = document.getElementById('loading-leave-reason');
+
+            const btnGenerateOverrideReason = document.getElementById('btn-generate-override-reason');
+            const overrideReasonTextarea = document.getElementById('override-reason-textarea');
+            const loadingOverrideReason = document.getElementById('loading-override-reason');
+
+            const btnGenerateOvertimeReason = document.getElementById('btn-generate-overtime-reason');
+            const overtimeReasonTextarea = document.getElementById('overtime-reason-textarea');
+            const loadingOvertimeReason = document.getElementById('loading-overtime-reason');
+
+            const btnSummarizeRequest = document.getElementById('btn-summarize-request');
+            const loadingSummary = document.getElementById('loading-summary');
+            const summaryOutput = document.getElementById('summary-output');
+
+
+            let historyStack = [];
             let clockInTime = null;
+
+            // --- Gemini API Call Function ---
+            async function callGeminiAPI(prompt, loadingElement, outputElement, isTextArea = false) {
+                loadingElement.classList.remove('hidden');
+                if (outputElement && !isTextArea) outputElement.classList.add('hidden'); // Hide summary output div if present
+
+                const chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will provide this key at runtime
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        if (isTextArea) {
+                            outputElement.value = text;
+                        } else {
+                            outputElement.textContent = text;
+                            outputElement.classList.remove('hidden');
+                        }
+                    } else {
+                        console.error('Gemini API response structure unexpected:', result);
+                        if (isTextArea) {
+                             outputElement.value = "Failed to generate reason. Please try again.";
+                        } else {
+                            outputElement.textContent = "Failed to generate summary.";
+                            outputElement.classList.remove('hidden');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    if (isTextArea) {
+                        outputElement.value = "Error generating reason. Network issue or API error.";
+                    } else {
+                        outputElement.textContent = "Error generating summary.";
+                        outputElement.classList.remove('hidden');
+                    }
+                } finally {
+                    loadingElement.classList.add('hidden');
+                }
+            }
+
 
             function showScreen(screenId) {
                 screens.forEach(s => s.classList.remove('active-screen'));
                 const targetScreen = document.getElementById(screenId);
                 if (targetScreen) {
                     targetScreen.classList.add('active-screen');
-                    // Update history stack, avoid duplicates at the end
-                    if (historyStack[historyStack.length - 1] !== screenId) {
+                    
+                    if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== screenId) {
                         historyStack.push(screenId);
                     }
                     updateBottomNavActiveState(screenId);
+
+                    if (screenId !== 'screen-loader') {
+                         appContainer.style.overflowY = 'auto';
+                    }
                 }
             }
 
             function goBack() {
                 if (historyStack.length > 1) {
-                    historyStack.pop(); // Remove current screen from stack
-                    const previousScreenId = historyStack[historyStack.length - 1]; // Get the screen we want to go back to
-                    screens.forEach(s => s.classList.remove('active-screen'));
-                    document.getElementById(previousScreenId).classList.add('active-screen');
-                    updateBottomNavActiveState(previousScreenId);
+                    historyStack.pop();
+                    const previousScreenId = historyStack[historyStack.length - 1];
+                    showScreen(previousScreenId);
                 } else {
-                     showScreen('screen-login'); // Fallback to login if stack is empty
+                    historyStack = [];
+                    showScreen('screen-login');
                 }
             }
             
             function updateBottomNavActiveState(currentScreenId) {
                 navBottomButtons.forEach(btn => {
-                    if (btn.dataset.target === currentScreenId) {
+                    const targetData = btn.dataset.target;
+                    const isDashboardScreen = (currentScreenId === 'screen-dashboard');
+                    
+                    if ((targetData === 'screen-dashboard' && isDashboardScreen) || (targetData === currentScreenId)) {
                         btn.classList.add('active');
                     } else {
                         btn.classList.remove('active');
@@ -501,19 +613,22 @@
                 });
             }
 
+            setTimeout(() => {
+                showScreen('screen-login');
+            }, 2500);
+
             navBackButtons.forEach(btn => btn.addEventListener('click', goBack));
             if (navBackToLoginButton) {
                 navBackToLoginButton.addEventListener('click', (e) => {
                     e.preventDefault();
-                    historyStack = ['screen-login'];
+                    historyStack = [];
                     showScreen('screen-login');
                 });
             }
             
             navBottomButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    historyStack.push(btn.dataset.target); // Ensure correct history for back button
-                    showScreen(btn.dataset.target);
+                     showScreen(btn.dataset.target);
                 });
             });
 
@@ -523,51 +638,55 @@
                 });
             });
 
-            managerApprovalItems.forEach(item => {
+            managerApprovalListItems.forEach(item => {
                 item.addEventListener('click', () => {
                     const type = item.dataset.approvalType;
                     const applicant = item.dataset.applicant;
                     const date = item.dataset.date;
                     const reason = item.dataset.reason;
-                    // For demo, just pass these as data attributes
-                    document.getElementById('detail-type').textContent = `Pengajuan ${type}`;
+                    const period = item.dataset.period;
+                    const duration = item.dataset.duration;
+                    const overrideDetail = item.dataset.overrideDetail;
+
+                    document.getElementById('detail-type').textContent = `${type} Request`;
                     document.getElementById('detail-applicant').textContent = applicant;
                     document.getElementById('detail-date').textContent = date;
                     document.getElementById('detail-reason').textContent = reason;
                     
                     const periodOrDurationEl = document.getElementById('detail-period-or-duration');
-                    if (type === 'Cuti') {
-                        periodOrDurationEl.innerHTML = `<span class="font-semibold">Periode:</span> ${item.querySelector('p:last-child').textContent.replace('Periode: ', '')}`;
-                    } else if (type === 'Lembur') {
-                        periodOrDurationEl.innerHTML = `<span class="font-semibold">Durasi:</span> ${item.querySelector('p:last-child').textContent.replace('Durasi: ', '')}`;
+                    periodOrDurationEl.innerHTML = '';
+                    if (type === 'Leave') {
+                        periodOrDurationEl.innerHTML = `<span class="font-semibold">Period:</span> ${period}`;
+                    } else if (type === 'Overtime') {
+                        periodOrDurationEl.innerHTML = `<span class="font-semibold">Duration:</span> ${duration}`;
                     } else if (type === 'Override') {
-                         periodOrDurationEl.innerHTML = `<span class="font-semibold">Detail:</span> ${item.querySelector('p:last-child').textContent.replace('Tanggal: ', '')}`;
+                         periodOrDurationEl.innerHTML = `<span class="font-semibold">Attendance Details:</span> ${overrideDetail}`;
                     }
                     
+                    summaryOutput.classList.add('hidden'); // Hide summary when new detail is loaded
                     showScreen('screen-manager-approval-detail');
                 });
             });
 
-            // --- Logic Layar Login ---
+            // --- Logic Login Screen ---
             document.getElementById('btn-login-lanjut').addEventListener('click', () => {
                 const nipInput = document.getElementById('nip');
-                if (nipInput.value.length >= 6) { // Minimal 6 karakter untuk NIP
+                if (nipInput.value.length >= 6) {
                     showScreen('screen-otp');
                     startOtpTimer();
-                    const otpInputs = document.querySelectorAll('.otp-input');
-                    otpInputs[0].focus(); // Focus on first OTP input
+                    otpInputs[0].focus();
                 } else {
-                    alert("NIP harus diisi minimal 6 karakter.");
+                    alert("NIP must be at least 6 characters long.");
                 }
             });
 
-            // --- Logic Layar OTP ---
-            const otpInputs = document.querySelectorAll('.otp-input');
+            // --- Logic OTP Screen ---
+            
             otpInputs.forEach((input, index) => {
                 input.addEventListener('input', (e) => {
                     if (e.data && index < otpInputs.length - 1) {
                         otpInputs[index + 1].focus();
-                    } else if (e.inputType === 'deleteContentBackward' && index > 0) {
+                    } else if (e.inputType === 'deleteContentBackward' && input.value === '' && index > 0) {
                         otpInputs[index - 1].focus();
                     }
                 });
@@ -589,7 +708,7 @@
                 resendBtn.classList.add('hidden');
                 timerEl.textContent = timer;
 
-                clearInterval(otpInterval); // Clear any existing timer
+                clearInterval(otpInterval);
                 otpInterval = setInterval(() => {
                     timer--;
                     timerEl.textContent = timer;
@@ -605,23 +724,22 @@
             
             document.getElementById('btn-verifikasi').addEventListener('click', () => {
                 const enteredOtp = Array.from(otpInputs).map(input => input.value).join('');
-                if (enteredOtp.length === 6) { // Simulate successful OTP
+                if (enteredOtp.length === 6) {
                     clearInterval(otpInterval);
-                    updateDashboard(false); // isClockedIn = false initially
-                    historyStack = ['screen-dashboard']; // Reset history for clean dashboard entry
+                    updateDashboard(false);
                     showScreen('screen-dashboard');
                 } else {
-                    alert("Silakan masukkan 6 digit kode OTP.");
+                    alert("Please enter a 6-digit OTP code.");
                 }
             });
 
-            // --- Logic Dashboard ---
+            // --- Logic Dashboard Screen ---
             function updateDashboard(isClockedIn) {
                 const card = document.getElementById('dashboard-card');
                 if (!isClockedIn) {
                     card.innerHTML = `
-                        <h3 class="font-semibold text-lg text-[#34495E]">Status Absensi Anda Hari Ini</h3>
-                        <p class="font-bold text-2xl text-[#E74C3C] my-4">Anda Belum Clock In</p>
+                        <h3 class="font-semibold text-lg text-[#34495E]">Your Attendance Status Today</h3>
+                        <p class="font-bold text-2xl text-[#E74C3C] my-4">You Haven't Clocked In</p>
                         <button id="btn-clock-in" class="w-full max-w-xs mx-auto bg-[#27AE60] text-white h-16 rounded-xl font-bold text-xl hover:bg-green-600 transition-colors flex items-center justify-center">📷 CLOCK IN</button>
                     `;
                     document.getElementById('btn-clock-in').addEventListener('click', () => {
@@ -630,15 +748,15 @@
                     });
                 } else {
                     card.innerHTML = `
-                        <h3 class="font-semibold text-lg text-[#34495E]">Status Absensi Anda Hari Ini</h3>
-                        <p class="font-bold text-2xl text-[#27AE60] my-4">Anda Sudah Clock In</p>
-                        <p class="text-sm text-[#7F8C8D]">Pada pukul ${clockInTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
+                        <h3 class="font-semibold text-lg text-[#34495E]">Your Attendance Status Today</h3>
+                        <p class="font-bold text-2xl text-[#27AE60] my-4">You Have Clocked In</p>
+                        <p class="text-sm text-[#7F8C8D]">At ${clockInTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                         <button id="btn-clock-out" class="w-full max-w-xs mx-auto mt-4 bg-[#F39C12] text-white h-16 rounded-xl font-bold text-xl hover:bg-orange-500 transition-colors flex items-center justify-center">🚪 CLOCK OUT</button>
                     `;
                      document.getElementById('btn-clock-out').addEventListener('click', () => {
-                        alert("Anda berhasil Clock Out!");
+                        alert("You have successfully Clocked Out!");
                         clockInTime = null;
-                        historyStack = ['screen-login'];
+                        historyStack = [];
                         showScreen('screen-login');
                     });
                 }
@@ -647,65 +765,113 @@
             function updateDateTime() {
                 const now = new Date();
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                document.getElementById('current-date').textContent = now.toLocaleDateString('id-ID', options);
-                document.getElementById('current-time').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+                document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
             setInterval(updateDateTime, 1000);
             updateDateTime();
 
-            // --- Logic Face Recognition ---
+            // --- Logic Face Recognition Screen ---
             function simulateFaceRec() {
                 const statusEl = document.getElementById('face-rec-status');
                 const spinnerEl = document.getElementById('face-rec-spinner');
-                statusEl.textContent = "Memindai wajah...";
+                statusEl.textContent = "Scanning face...";
                 spinnerEl.classList.remove('hidden');
 
                 setTimeout(() => {
-                    statusEl.textContent = "Absensi Berhasil!";
+                    statusEl.textContent = "Attendance Successful!";
                     statusEl.classList.add('text-green-400');
                     spinnerEl.classList.add('hidden');
                     setTimeout(() => {
                         clockInTime = new Date();
                         updateDashboard(true);
-                        historyStack = ['screen-dashboard']; // Reset history for clean dashboard entry
                         showScreen('screen-dashboard');
-                        statusEl.textContent = "Posisikan wajah Anda";
+                        statusEl.textContent = "Position your face";
                         statusEl.classList.remove('text-green-400');
                     }, 1500);
                 }, 2000);
             }
 
-            // --- Logic Pengajuan Cuti, Override, Lembur ---
+            // --- Logic Leave, Override, Overtime Submission Screens ---
             document.getElementById('btn-submit-leave').addEventListener('click', () => {
-                alert("Pengajuan cuti berhasil dikirim!");
+                alert("Leave request successfully submitted!");
                 goBack();
             });
             document.getElementById('btn-submit-override').addEventListener('click', () => {
-                alert("Pengajuan override berhasil dikirim!");
+                alert("Override request successfully submitted!");
                 goBack();
             });
             document.getElementById('btn-submit-overtime').addEventListener('click', () => {
-                alert("Pengajuan lembur berhasil dikirim!");
+                alert("Overtime request successfully submitted!");
                 goBack();
             });
 
-            // --- Logic Profil ---
+            // --- Logic Profile Screen ---
             document.getElementById('btn-logout').addEventListener('click', () => {
-                alert("Anda telah berhasil keluar.");
+                alert("You have successfully logged out.");
                 clockInTime = null;
-                historyStack = ['screen-login'];
+                historyStack = [];
                 showScreen('screen-login');
             });
 
-            // --- Logic Persetujuan Atasan ---
+            // --- Logic Manager Approval Screens ---
             document.getElementById('btn-approve-request').addEventListener('click', () => {
-                alert("Pengajuan telah Disetujui!");
-                goBack(); // Back to approval list
+                alert("Request Approved!");
+                goBack();
             });
             document.getElementById('btn-reject-request').addEventListener('click', () => {
-                alert("Pengajuan telah Ditolak!");
-                goBack(); // Back to approval list
+                alert("Request Rejected!");
+                goBack();
             });
+
+            // --- LLM Feature: Generate Reason for Leave Request ---
+            if (btnGenerateLeaveReason) {
+                btnGenerateLeaveReason.addEventListener('click', async () => {
+                    const currentReason = leaveReasonTextarea.value.trim();
+                    const leaveType = document.getElementById('leave-type-select').value;
+                    const prompt = `Please generate a formal and concise reason for a "${leaveType}" request. The current input/keywords are: "${currentReason}". Make it suitable for an official work leave request.`;
+                    await callGeminiAPI(prompt, loadingLeaveReason, leaveReasonTextarea, true);
+                });
+            }
+
+            // --- LLM Feature: Generate Reason for Override Request ---
+            if (btnGenerateOverrideReason) {
+                btnGenerateOverrideReason.addEventListener('click', async () => {
+                    const currentReason = overrideReasonTextarea.value.trim();
+                    const prompt = `Please generate a formal and concise reason for an "Attendance Override" request. The current input/keywords are: "${currentReason}". Make it suitable for an official work request.`;
+                    await callGeminiAPI(prompt, loadingOverrideReason, overrideReasonTextarea, true);
+                });
+            }
+
+            // --- LLM Feature: Generate Reason for Overtime Request ---
+            if (btnGenerateOvertimeReason) {
+                btnGenerateOvertimeReason.addEventListener('click', async () => {
+                    const currentReason = overtimeReasonTextarea.value.trim();
+                    const prompt = `Please generate a formal and concise reason for an "Overtime" request. The current input/keywords are: "${currentReason}". Make it suitable for an official work request.`;
+                    await callGeminiAPI(prompt, loadingOvertimeReason, overtimeReasonTextarea, true);
+                });
+            }
+
+            // --- LLM Feature: Summarize Request for Manager ---
+            if (btnSummarizeRequest) {
+                btnSummarizeRequest.addEventListener('click', async () => {
+                    const type = document.getElementById('detail-type').textContent;
+                    const applicant = document.getElementById('detail-applicant').textContent;
+                    const date = document.getElementById('detail-date').textContent;
+                    const reason = document.getElementById('detail-reason').textContent;
+                    const periodOrDuration = document.getElementById('detail-period-or-duration').textContent;
+
+                    const prompt = `Summarize the following attendance request details concisely for a manager:
+                    Request Type: ${type}
+                    Applicant: ${applicant}
+                    Date Submitted: ${date}
+                    Reason/Notes: ${reason}
+                    ${periodOrDuration}
+                    Provide a brief summary suitable for a quick review.`;
+                    
+                    await callGeminiAPI(prompt, loadingSummary, summaryOutput, false);
+                });
+            }
             
         });
     </script>
